@@ -9,6 +9,11 @@ def getLispTorepathAndRenameXref(targetXref, newXrefPath):
     (princ "\\n{targetXref} not found. ")
     )'''
     return baselispforinjection
+def getLispToOverlayeXref(targetXrefPath):
+    baselispforinjection=f'''
+    (COMMAND "TILEMODE" "1" "-layer" "m" "ZZ-Zz9030-M-ExtReferenceInfo" "" "-xref" "O" "{targetXrefPath}" "r" "0" "s" "1" "0,0,0" "Draworder" "si" "l" "Back" )
+    '''
+    return baselispforinjection
 class ExternalDWG:
     def __init__(self, root):
         self.root = root
@@ -19,11 +24,24 @@ class ExternalDWG:
         # self.root.maxsize(600,300)
         # self.root.resizable(False, False)
         self.leftMainFrame = Frame(self.root, width=200, bg='lightgrey')
+        introductionButton = Button(self.leftMainFrame, text="Introduction", command=self.showIntroduction)
+        introductionButton.pack(side="top", padx=10, pady=10, fill=X)
         load_Drawing_btn = Button(self.leftMainFrame, text="Load Drawings", command=self.onLoadDrawing) #command=self.setup_drawing_window
-        load_Drawing_btn.pack(side="top", padx=10, pady=10)
+        load_Drawing_btn.pack(side="top", padx=10, pady=[0,10], fill=X)
+        attachXrefButton = Button(self.leftMainFrame, text="Overlay", command=self.overlayXrefs)
+        attachXrefButton.pack(side="top", padx=10, pady=[0,10], fill=X)
         self.leftMainFrame.pack(side='left', fill='y')
         self.rightFrame = Frame(self.root)
         self.rightFrame.pack(fill=BOTH, expand=True)
+    def showIntroduction(self):
+        for wd in self.rightFrame.winfo_children():
+            wd.destroy()
+        titleLabel = Label(self.rightFrame, text="INTRODUCTION", font=("Arial", 15, ["bold", "underline"]))
+        titleLabel.pack(side="top")
+        usageParagparh = Label(self.rightFrame, text="This is usage information area to be updated", font=("Arial", 10, ["bold"]))
+        usageParagparh.pack(padx=10, pady=10)
+        #here I will add usage and documentation in future....
+
     def onLoadDrawing(self):
         for wd in self.rightFrame.winfo_children():
             wd.destroy()
@@ -80,6 +98,62 @@ class ExternalDWG:
             self.onLoadDrawing()
             return
         messagebox.showinfo("No files selected", "Please select drawing file(s) to proceed.")
+    def overlayXrefs(self):
+        for wb in self.rightFrame.winfo_children():
+            wb.destroy()
+        def browseXrefOverLayfile(xrefPathEntry):
+            xrefPath = filedialog.askopenfilename(title="Select Xref Overlay File", filetypes=[("DWG files", "*.dwg")])
+            if xrefPath is not None:
+                xrefPathEntry.delete(0, END)
+                xrefPathEntry.insert(0, xrefPath)
+        rightFirstFrame = Frame(self.rightFrame)
+        rightSecondFrame = Frame(self.rightFrame)
+        rightThirdFrame = Frame(self.rightFrame)
+        # First frame elements:
+        optionLabel = Label(rightFirstFrame, text="Option", bg="skyblue", borderwidth=1, relief=SOLID)
+        optionLabel.pack(side="top", fill=X)
+        xrefPathLabel = Label(rightFirstFrame, text="Xref Path", borderwidth=1, relief=SOLID)
+        xrefPathLabel.pack(side="top", anchor="w", fill=X ,pady=2)
+        xrefInsertionPointLabel = Label(rightFirstFrame, text="Insertion Point", borderwidth=1, relief=SOLID)
+        xrefInsertionPointLabel.pack(side="top", anchor="w", fill=X ,pady=2)
+        xrefRotationLabel = Label(rightFirstFrame, text="Rotation", borderwidth=1, relief=SOLID)
+        xrefRotationLabel.pack(side="top", anchor="w", fill=X ,pady=2)
+        xrefScaleLabel = Label(rightFirstFrame, text="Scale", borderwidth=1, relief=SOLID)
+        xrefScaleLabel.pack(side="top", anchor="w", fill=X ,pady=2)
+        xrefDraworderLabel = Label(rightFirstFrame, text="Draworder - Front/Back", borderwidth=1, relief=SOLID)
+        xrefDraworderLabel.pack(side="top", anchor="w", fill=X ,pady=2)
+        xrefLayerLabel = Label(rightFirstFrame, text="Destination Layer Name", borderwidth=1, relief=SOLID)
+        xrefLayerLabel.pack(side="top", anchor="w", fill=X ,pady=2)
+
+        # Second frame elements:
+        xrefValueLabel = Label(rightSecondFrame, text="Value", bg="skyblue", borderwidth=1, relief=SOLID)
+        xrefValueLabel.pack(side="top", fill=X)
+        xrefPathEntry = Entry(rightSecondFrame)
+        xrefPathEntry.pack(side="top", fill=X ,pady=2)
+        xrefInsertionPointEntry = Entry(rightSecondFrame)
+        xrefInsertionPointEntry.pack(side="top", fill=X ,pady=2)
+        xrefRotationEntry = Entry(rightSecondFrame)
+        xrefRotationEntry.pack(side="top", fill=X ,pady=2)
+        xrefScaleEntry = Entry(rightSecondFrame)
+        xrefScaleEntry.pack(side="top", fill=X ,pady=2)
+        xrefDraworderEntry = Entry(rightSecondFrame)
+        xrefDraworderEntry.pack(side="top", fill=X ,pady=2)
+        xrefLayerEntry = Entry(rightSecondFrame)
+        xrefLayerEntry.pack(side="top", fill=X ,pady=2)
+
+        # Third frame elements:
+        blankLabel = Label(rightThirdFrame, text="",bg="skyblue", borderwidth=1,relief=SOLID)
+        blankLabel.pack(side="top", fill=X)
+        xrefBrowseBtn = Button(rightThirdFrame, text="Browse", command=lambda x=xrefPathEntry:browseXrefOverLayfile(x))
+        xrefBrowseBtn.pack(side="top", fill=X)
+        for i in range(5):
+            Label(rightThirdFrame, text="", bg="skyblue").pack(side="top", fill=BOTH)
+        
+        # Packing the frames side by side
+        rightFirstFrame.pack(side="left", anchor="nw", fill=Y)
+        rightSecondFrame.pack(side="left", anchor="n", fill=Y)
+        rightThirdFrame.pack(side="left", anchor="n",fill=Y)
+        
 root = Tk()
 if not os.path.exists(autoDeskFolder):
     messagebox.showerror("AutoDesk not found", "Please install AutoCAD/CIVIL 3D installed before using it.")
@@ -95,9 +169,12 @@ for fs in internalAutoDeskFolder:
         intenalAutoCADFolder = os.listdir(os.path.join(autoDeskFolder, fs))
         if "C3D" in list(intenalAutoCADFolder):
             C3DVersions.add(versionNumber)
-        AcadVersions.add(versionNumber)
-print(versions)
-print(f"C3D versions: {C3DVersions}")
-print(f"Acad versions: {AcadVersions}")
+        if "acad.exe" in list(intenalAutoCADFolder):
+            AcadVersions.add(versionNumber)
+# print(versions)
+# print(f"C3D versions: {C3DVersions}")
+# print(f"Acad versions: {AcadVersions}")
+
 externalDWG = ExternalDWG(root)
+externalDWG.showIntroduction()
 root.mainloop()
