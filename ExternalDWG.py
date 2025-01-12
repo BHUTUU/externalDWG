@@ -34,6 +34,10 @@ class ExternalDWG:
         self.rightFrame = Frame(self.root)
         self.rightFrame.pack(fill=BOTH, expand=True)
     def showIntroduction(self):
+        # self.root.resizable(True, True)
+        self.root.maxsize(600, 300)
+        self.root.geometry("600x300")
+        self.rightFrame.config(bg="#f0f0f0")
         for wd in self.rightFrame.winfo_children():
             wd.destroy()
         titleLabel = Label(self.rightFrame, text="INTRODUCTION", font=("Arial", 15, ["bold", "underline"]))
@@ -43,6 +47,9 @@ class ExternalDWG:
         #here I will add usage and documentation in future....
 
     def onLoadDrawing(self):
+        self.root.maxsize(600, 300)
+        self.root.geometry("600x300")
+        self.rightFrame.config(bg="#f0f0f0")
         for wd in self.rightFrame.winfo_children():
             wd.destroy()
         canvas = Canvas(self.rightFrame)
@@ -86,6 +93,7 @@ class ExternalDWG:
         try:
             for files in self.toworkonfiles:
                 self.selected_files.remove(str(files))
+                self.onLoadDrawing()
         except Exception as e:
             pass
         self.onLoadDrawing()
@@ -106,24 +114,28 @@ class ExternalDWG:
             if xrefPath is not None:
                 xrefPathEntry.delete(0, END)
                 xrefPathEntry.insert(0, xrefPath)
-        rightFirstFrame = Frame(self.rightFrame)
-        rightSecondFrame = Frame(self.rightFrame)
-        rightThirdFrame = Frame(self.rightFrame)
+        rightFirstFrame = Frame(self.rightFrame,bg="skyblue")
+        rightSecondFrame = Frame(self.rightFrame,bg="skyblue")
+        rightThirdFrame = Frame(self.rightFrame,bg="skyblue")
+        self.rightFrame.config(bg="skyblue")
+        self.root.geometry("415x150")
+        self.root.maxsize(415,150)
+        self.root.resizable(False, False)
         # First frame elements:
         optionLabel = Label(rightFirstFrame, text="Option", bg="skyblue", borderwidth=1, relief=SOLID)
         optionLabel.pack(side="top", fill=X)
         xrefPathLabel = Label(rightFirstFrame, text="Xref Path", borderwidth=1, relief=SOLID)
         xrefPathLabel.pack(side="top", anchor="w", fill=X ,pady=2)
         xrefInsertionPointLabel = Label(rightFirstFrame, text="Insertion Point", borderwidth=1, relief=SOLID)
-        xrefInsertionPointLabel.pack(side="top", anchor="w", fill=X ,pady=2)
+        xrefInsertionPointLabel.pack(side="top", anchor="w", fill=X ,pady=1)
         xrefRotationLabel = Label(rightFirstFrame, text="Rotation", borderwidth=1, relief=SOLID)
-        xrefRotationLabel.pack(side="top", anchor="w", fill=X ,pady=2)
+        xrefRotationLabel.pack(side="top", anchor="w", fill=X ,pady=1)
         xrefScaleLabel = Label(rightFirstFrame, text="Scale", borderwidth=1, relief=SOLID)
-        xrefScaleLabel.pack(side="top", anchor="w", fill=X ,pady=2)
+        xrefScaleLabel.pack(side="top", anchor="w", fill=X ,pady=1)
         xrefDraworderLabel = Label(rightFirstFrame, text="Draworder - Front/Back", borderwidth=1, relief=SOLID)
-        xrefDraworderLabel.pack(side="top", anchor="w", fill=X ,pady=2)
+        xrefDraworderLabel.pack(side="top", anchor="w", fill=X ,pady=1)
         xrefLayerLabel = Label(rightFirstFrame, text="Destination Layer Name", borderwidth=1, relief=SOLID)
-        xrefLayerLabel.pack(side="top", anchor="w", fill=X ,pady=2)
+        xrefLayerLabel.pack(side="top", anchor="w", fill=X ,pady=1)
 
         # Second frame elements:
         xrefValueLabel = Label(rightSecondFrame, text="Value", bg="skyblue", borderwidth=1, relief=SOLID)
@@ -131,15 +143,15 @@ class ExternalDWG:
         xrefPathEntry = Entry(rightSecondFrame)
         xrefPathEntry.pack(side="top", fill=X ,pady=2)
         xrefInsertionPointEntry = Entry(rightSecondFrame)
-        xrefInsertionPointEntry.pack(side="top", fill=X ,pady=2)
+        xrefInsertionPointEntry.pack(side="top", fill=X ,pady=1)
         xrefRotationEntry = Entry(rightSecondFrame)
-        xrefRotationEntry.pack(side="top", fill=X ,pady=2)
+        xrefRotationEntry.pack(side="top", fill=X ,pady=1)
         xrefScaleEntry = Entry(rightSecondFrame)
-        xrefScaleEntry.pack(side="top", fill=X ,pady=2)
+        xrefScaleEntry.pack(side="top", fill=X ,pady=1)
         xrefDraworderEntry = Entry(rightSecondFrame)
-        xrefDraworderEntry.pack(side="top", fill=X ,pady=2)
+        xrefDraworderEntry.pack(side="top", fill=X ,pady=1)
         xrefLayerEntry = Entry(rightSecondFrame)
-        xrefLayerEntry.pack(side="top", fill=X ,pady=2)
+        xrefLayerEntry.pack(side="top", fill=X ,pady=1)
 
         # Third frame elements:
         blankLabel = Label(rightThirdFrame, text="",bg="skyblue", borderwidth=1,relief=SOLID)
@@ -155,6 +167,7 @@ class ExternalDWG:
         rightThirdFrame.pack(side="left", anchor="n",fill=Y)
         
 root = Tk()
+"""
 if not os.path.exists(autoDeskFolder):
     messagebox.showerror("AutoDesk not found", "Please install AutoCAD/CIVIL 3D installed before using it.")
     exit(0)
@@ -171,6 +184,7 @@ for fs in internalAutoDeskFolder:
             C3DVersions.add(versionNumber)
         if "acad.exe" in list(intenalAutoCADFolder):
             AcadVersions.add(versionNumber)
+"""
 # print(versions)
 # print(f"C3D versions: {C3DVersions}")
 # print(f"Acad versions: {AcadVersions}")
