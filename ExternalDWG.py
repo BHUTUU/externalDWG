@@ -88,15 +88,18 @@ class ExternalDWG:
                 self.toworkonfiles.add(self.selected_files[index])
         else:
             if self.selected_files[index] in self.toworkonfiles:
-                self.toworkonfiles.remove(self.selected_files[index])
+                    self.toworkonfiles.remove(self.selected_files[index])
     def removeSelectedFiles(self):
         try:
-            for files in self.toworkonfiles:
-                self.selected_files.remove(str(files))
-                self.onLoadDrawing()
+            files_to_remove = list(self.toworkonfiles)
+            for file in files_to_remove:
+                if file in self.selected_files:
+                    self.selected_files.remove(file)
+            self.toworkonfiles.clear()
+            self.onLoadDrawing()
         except Exception as e:
-            pass
-        self.onLoadDrawing()
+            messagebox.showinfo("No files selected", "Please select drawing file(s) to proceed.")
+
     def addFiles(self):
         getFilesVar = filedialog.askopenfilenames(title="Select Target Drawing Files", filetypes=[("DWG files", "*.dwg")])
         if getFilesVar is not None:
