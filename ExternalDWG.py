@@ -9,9 +9,9 @@ def getLispTorepathAndRenameXref(targetXref, newXrefPath):
     (princ "\\n{targetXref} not found. ")
     )'''
     return baselispforinjection
-def getLispToOverlayeXref(targetXrefPath):
+def getLispToOverlayeXref(targetXrefPath, xrefLayer="ZZ-Zz9030-M-ExtReferenceInfo", xrefDrawOrder="back"):
     baselispforinjection=f'''
-    (COMMAND "TILEMODE" "1" "-layer" "m" "ZZ-Zz9030-M-ExtReferenceInfo" "" "-xref" "O" "{targetXrefPath}" "r" "0" "s" "1" "0,0,0" "Draworder" "si" "l" "Back" )
+    (COMMAND "TILEMODE" "1" "-layer" "m" "{xrefLayer}" "" "-xref" "O" "{targetXrefPath}" "r" "0" "s" "1" "0,0,0" "Draworder" "si" "l" "{xrefDrawOrder}" )
     '''
     return baselispforinjection
 class ExternalDWG:
@@ -21,6 +21,7 @@ class ExternalDWG:
         self.toworkonfiles=set()
         self.root.title("External DWG")
         self.root.geometry("600x300")
+        self.taskList = []
         # self.root.maxsize(600,300)
         # self.root.resizable(False, False)
         self.leftMainFrame = Frame(self.root, width=200, bg='lightgrey')
@@ -147,22 +148,41 @@ class ExternalDWG:
         xrefPathEntry.pack(side="top", fill=X ,pady=2)
         xrefInsertionPointEntry = Entry(rightSecondFrame)
         xrefInsertionPointEntry.pack(side="top", fill=X ,pady=1)
+        xrefInsertionPointEntry.insert(0, "0,0,0")
         xrefRotationEntry = Entry(rightSecondFrame)
         xrefRotationEntry.pack(side="top", fill=X ,pady=1)
+        xrefRotationEntry.insert(0,"0")
         xrefScaleEntry = Entry(rightSecondFrame)
         xrefScaleEntry.pack(side="top", fill=X ,pady=1)
+        xrefScaleEntry.insert(0,"1")
         xrefDraworderEntry = Entry(rightSecondFrame)
         xrefDraworderEntry.pack(side="top", fill=X ,pady=1)
         xrefLayerEntry = Entry(rightSecondFrame)
         xrefLayerEntry.pack(side="top", fill=X ,pady=1)
+        xrefLayerEntry.insert(0,"ZZ-Zz9030-M-ExtReferenceInfo")
 
         # Third frame elements:
         blankLabel = Label(rightThirdFrame, text="",bg="skyblue", borderwidth=1,relief=SOLID)
         blankLabel.pack(side="top", fill=X)
         xrefBrowseBtn = Button(rightThirdFrame, text="Browse", command=lambda x=xrefPathEntry:browseXrefOverLayfile(x))
         xrefBrowseBtn.pack(side="top", fill=X)
-        for i in range(5):
-            Label(rightThirdFrame, text="", bg="skyblue").pack(side="top", fill=BOTH)
+        def addThisOverlayToTaskList():
+            xrefPath = xrefPathEntry.get()
+            layerName = xrefLayerEntry.get()
+            draworder = xrefDraworderEntry.get()
+            insertionPoint = xrefInsertionPointEntry.get()
+            rotation = xrefRotationEntry.get()
+            scale = xrefScaleEntry.get()
+            if not all([xrefPath, layerName, draworder, insertionPoint, rotation, scale]):
+                messagebox.showerror("Invalid input", "All fields are required.")
+                return
+            listToInject = getLispToOverlayeXref(xrefPath, layerName, draworder)
+            self.taskList.append(listToInject)
+            print(listToInject)
+        addTaskButton = Button(rightThirdFrame, text="Add", command=addThisOverlayToTaskList).pack(side=TOP, fill=BOTH)
+        # for i in range(5):
+        #     Label(rightThirdFrame, text="", bg="skyblue").pack(side="top", fill=BOTH)
+        
         
         # Packing the frames side by side
         rightFirstFrame.pack(side="left", anchor="nw", fill=Y)
@@ -170,7 +190,7 @@ class ExternalDWG:
         rightThirdFrame.pack(side="left", anchor="n",fill=Y)
         
 root = Tk()
-"""
+
 if not os.path.exists(autoDeskFolder):
     messagebox.showerror("AutoDesk not found", "Please install AutoCAD/CIVIL 3D installed before using it.")
     exit(0)
@@ -187,10 +207,10 @@ for fs in internalAutoDeskFolder:
             C3DVersions.add(versionNumber)
         if "acad.exe" in list(intenalAutoCADFolder):
             AcadVersions.add(versionNumber)
-"""
-# print(versions)
-# print(f"C3D versions: {C3DVersions}")
-# print(f"Acad versions: {AcadVersions}")
+
+print(versions)
+print(f"C3D versions: {C3DVersions}")
+print(f"Acad versions: {AcadVersions}")
 
 externalDWG = ExternalDWG(root)
 externalDWG.showIntroduction()
