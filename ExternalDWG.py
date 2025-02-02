@@ -22,6 +22,7 @@ class ExternalDWG:
         self.root.title("External DWG")
         self.root.geometry("600x300")
         self.taskList = []
+        self.toworkonTasklist = set()
         # self.root.maxsize(600,300)
         # self.root.resizable(False, False)
         self.leftMainFrame = Frame(self.root, width=200, bg='lightgrey')
@@ -29,11 +30,64 @@ class ExternalDWG:
         introductionButton.pack(side="top", padx=10, pady=10, fill=X)
         load_Drawing_btn = Button(self.leftMainFrame, text="Load Drawings", command=self.onLoadDrawing) #command=self.setup_drawing_window
         load_Drawing_btn.pack(side="top", padx=10, pady=[0,10], fill=X)
-        attachXrefButton = Button(self.leftMainFrame, text="Overlay", command=self.overlayXrefs)
-        attachXrefButton.pack(side="top", padx=10, pady=[0,10], fill=X)
+        overlayXrefButton = Button(self.leftMainFrame, text="Overlay", command=self.overlayXrefs)
+        overlayXrefButton.pack(side="top", padx=10, pady=[0,10], fill=X)
+        tasklistButton = Button(self.leftMainFrame, text="Task List", command=self.showTasklist)
+        tasklistButton.pack(side=TOP, padx=10, pady=[0,10], fill=X)
         self.leftMainFrame.pack(side='left', fill='y')
         self.rightFrame = Frame(self.root)
         self.rightFrame.pack(fill=BOTH, expand=True)
+    def showTasklist(self):
+        self.root.maxsize(600, 300)
+        self.root.geometry("600x300")
+        self.rightFrame.config(bg="#f0f0f0")
+        for  wd in self.rightFrame.winfo_children():
+            wd.destroy()
+        titleLabel = Label(self.rightFrame, text="Task List", font=("Arial", 15, ["bold", "underline"]))
+        titleLabel.pack(side=TOP)
+        taskCanavas = Canvas(self.rightFrame)
+        taskScroller = Scrollbar(self.rightFrame, orient=VERTICAL, command=taskCanavas.yview)
+        taskScrollableFrame = Frame(taskCanavas)
+        taskScrollableFrame.bind(
+            "<Configure>",
+            lambda e: taskCanavas.configure(scrollregion=taskCanavas.bbox("all"))
+        )
+        taskCanavas.create_window((0,0), window=taskScrollableFrame, anchor="nw")
+        taskCanavas.configure(yscrollcommand=taskScroller.set)
+        taskCanavas.pack(side=LEFT,fill=BOTH,expand=True)
+        taskScroller.pack(side=RIGHT, fill=Y)
+        self.tasks_check_vars=[]
+        for index, task in enumerate(self.taskList):
+            if task in self.toworkonTasklist:
+                var = IntVar(value=1)
+            else:
+                var = IntVar(value=0)
+            self.tasks_check_vars.append(var)
+            task_frame = Frame(taskScrollableFrame)
+            task_frame.pack(fill=X, padx=10, pady=2)
+            cb = Checkbutton(task_frame, variable=var, command=lambda i=index: self.update_task(i))
+            cb.pack(side=LEFT)
+            label = Label(task_frame, text=task, wraplength=300, anchor=W, justify=LEFT)
+            label.pack(side=LEFT, fill=X, expand=True)
+        removeTaskButton = Button(self.rightFrame, text="Remove Selected", width=18, command=self.removeSelectedTask).pack(side=BOTTOM, pady=3)
+    def update_task(self, index):
+        if self.tasks_check_vars[index].get() == 1:
+            if self.taskList[index] not in self.toworkonTasklist:
+                self.toworkonTasklist.add(self.taskList[index])
+        else:
+            if self.taskList[index] in self.toworkonTasklist:
+                    self.toworkonTasklist.remove(self.taskList[index])
+    def removeSelectedTask(self):
+        try:
+            task_to_remove = list(self.toworkonTasklist)
+            for file in task_to_remove:
+                if file in self.taskList:
+                    self.taskList.remove(file)
+            self.toworkonTasklist.clear()
+            self.showTasklist()
+        except Exception as e:
+            messagebox.showinfo("No task selected", "Please select a task to proceed.")
+
     def showIntroduction(self):
         # self.root.resizable(True, True)
         self.root.maxsize(600, 300)
@@ -46,7 +100,6 @@ class ExternalDWG:
         usageParagparh = Label(self.rightFrame, text="This is usage information area to be updated", font=("Arial", 10, ["bold"]))
         usageParagparh.pack(padx=10, pady=10)
         #here I will add usage and documentation in future....
-
     def onLoadDrawing(self):
         self.root.maxsize(600, 300)
         self.root.geometry("600x300")
@@ -66,13 +119,13 @@ class ExternalDWG:
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side=LEFT, fill=BOTH, expand=True)
         scrollbar.pack(side=RIGHT, fill=Y)
-        self.check_vars = []
+        self.add_drawing_check_vars = []
         for index, file in enumerate(self.selected_files):
             if file in self.toworkonfiles:
                 var = IntVar(value=1)
             else:
                 var = IntVar(value=0)
-            self.check_vars.append(var)
+            self.add_drawing_check_vars.append(var)
             file_frame = Frame(scrollable_frame)
             file_frame.pack(fill=X, padx=10, pady=2)
             cb = Checkbutton(file_frame, variable=var, command=lambda i=index: self.update_files(i))
@@ -84,7 +137,7 @@ class ExternalDWG:
         self.rightMainFrame = Frame(self.root,background="yellow")
         self.rightMainFrame.pack(side=RIGHT, fill=Y)
     def update_files(self, index):
-        if self.check_vars[index].get() == 1:
+        if self.add_drawing_check_vars[index].get() == 1:
             if self.selected_files[index] not in self.toworkonfiles:
                 self.toworkonfiles.add(self.selected_files[index])
         else:
@@ -122,9 +175,9 @@ class ExternalDWG:
         rightSecondFrame = Frame(self.rightFrame,bg="skyblue")
         rightThirdFrame = Frame(self.rightFrame,bg="skyblue")
         self.rightFrame.config(bg="skyblue")
-        self.root.geometry("415x150")
-        self.root.maxsize(415,150)
-        self.root.resizable(False, False)
+        # self.root.geometry("415x150")
+        # self.root.maxsize(415,150)
+        # self.root.resizable(False, False)
         # First frame elements:
         optionLabel = Label(rightFirstFrame, text="Option", bg="skyblue", borderwidth=1, relief=SOLID)
         optionLabel.pack(side="top", fill=X)
@@ -157,6 +210,7 @@ class ExternalDWG:
         xrefScaleEntry.insert(0,"1")
         xrefDraworderEntry = Entry(rightSecondFrame)
         xrefDraworderEntry.pack(side="top", fill=X ,pady=1)
+        xrefDraworderEntry.insert(0,"back")
         xrefLayerEntry = Entry(rightSecondFrame)
         xrefLayerEntry.pack(side="top", fill=X ,pady=1)
         xrefLayerEntry.insert(0,"ZZ-Zz9030-M-ExtReferenceInfo")
@@ -179,7 +233,7 @@ class ExternalDWG:
             listToInject = getLispToOverlayeXref(xrefPath, layerName, draworder)
             self.taskList.append(listToInject)
             print(listToInject)
-        addTaskButton = Button(rightThirdFrame, text="Add", command=addThisOverlayToTaskList).pack(side=TOP, fill=BOTH)
+        addTaskButton = Button(rightThirdFrame, text="Add", command=addThisOverlayToTaskList).pack(side=TOP, fill=BOTH,expand=True)
         # for i in range(5):
         #     Label(rightThirdFrame, text="", bg="skyblue").pack(side="top", fill=BOTH)
         
@@ -187,7 +241,7 @@ class ExternalDWG:
         # Packing the frames side by side
         rightFirstFrame.pack(side="left", anchor="nw", fill=Y)
         rightSecondFrame.pack(side="left", anchor="n", fill=Y)
-        rightThirdFrame.pack(side="left", anchor="n",fill=Y)
+        rightThirdFrame.pack(side="right", anchor="n",fill=Y)
         
 root = Tk()
 
