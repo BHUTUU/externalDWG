@@ -23,12 +23,10 @@ class ExternalDWG:
         self.root.geometry("600x300")
         self.taskList = []
         self.toworkonTasklist = set()
-        # self.root.maxsize(600,300)
-        # self.root.resizable(False, False)
         self.leftMainFrame = Frame(self.root, width=200, bg='lightgrey')
         introductionButton = Button(self.leftMainFrame, text="Introduction", command=self.showIntroduction)
         introductionButton.pack(side="top", padx=10, pady=10, fill=X)
-        load_Drawing_btn = Button(self.leftMainFrame, text="Load Drawings", command=self.onLoadDrawing) #command=self.setup_drawing_window
+        load_Drawing_btn = Button(self.leftMainFrame, text="Load Drawings", command=self.onLoadDrawing)
         load_Drawing_btn.pack(side="top", padx=10, pady=[0,10], fill=X)
         overlayXrefButton = Button(self.leftMainFrame, text="Overlay", command=self.overlayXrefs)
         overlayXrefButton.pack(side="top", padx=10, pady=[0,10], fill=X)
@@ -56,6 +54,8 @@ class ExternalDWG:
         taskCanavas.configure(yscrollcommand=taskScroller.set)
         taskCanavas.pack(side=LEFT,fill=BOTH,expand=True)
         taskScroller.pack(side=RIGHT, fill=Y)
+        taskCanavas.bind("<Enter>", lambda e: taskCanavas.bind_all("<MouseWheel>", lambda e: taskCanavas.yview_scroll(int(-1 * (e.delta / 120)), "units")))
+        taskCanavas.bind("<Leave>", lambda e: taskCanavas.unbind_all("<MouseWheel>"))
         self.tasks_check_vars=[]
         for index, task in enumerate(self.taskList):
             if task in self.toworkonTasklist:
@@ -87,7 +87,6 @@ class ExternalDWG:
             self.showTasklist()
         except Exception as e:
             messagebox.showinfo("No task selected", "Please select a task to proceed.")
-
     def showIntroduction(self):
         # self.root.resizable(True, True)
         self.root.maxsize(600, 300)
@@ -119,6 +118,8 @@ class ExternalDWG:
         canvas.configure(yscrollcommand=scrollbar.set)
         canvas.pack(side=LEFT, fill=BOTH, expand=True)
         scrollbar.pack(side=RIGHT, fill=Y)
+        canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
+        canvas.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
         self.add_drawing_check_vars = []
         for index, file in enumerate(self.selected_files):
             if file in self.toworkonfiles:
@@ -133,9 +134,22 @@ class ExternalDWG:
             label = Label(file_frame, text=file, wraplength=300, anchor=W, justify=LEFT)
             label.pack(side=LEFT, fill=X, expand=True)
         removeDrawingButton = Button(self.rightFrame, text="Remove Selected", width=18, command=self.removeSelectedFiles).pack(side=BOTTOM, pady=3)
+        selectAllButton = Button(self.rightFrame, text="Select All", command=self.selectAllFiles, width=18).pack(side=BOTTOM, pady=3)
         addDrawingButton = Button(self.rightFrame, text="Browse", width=18, command=self.addFiles).pack(side=BOTTOM, pady=3)
         self.rightMainFrame = Frame(self.root,background="yellow")
         self.rightMainFrame.pack(side=RIGHT, fill=Y)
+        def resetSelectAllButton():
+            removeDrawingButton.config(text=["Unselect All", "Select All"][int(all(select_var.get() for select_var in self.add_drawing_check_vars))])
+        self.rightFrame.after(100, resetSelectAllButton)
+        
+    def selectAllFiles(self):
+        for var in self.add_drawing_check_vars:
+            var.set(1)
+        self.onLoadDrawing()
+    def unselectAllFiles(self):
+        for var in self.add_drawing_check_vars:
+            var.set(0)
+        self.onLoadDrawing()
     def update_files(self, index):
         if self.add_drawing_check_vars[index].get() == 1:
             if self.selected_files[index] not in self.toworkonfiles:
@@ -153,7 +167,6 @@ class ExternalDWG:
             self.onLoadDrawing()
         except Exception as e:
             messagebox.showinfo("No files selected", "Please select drawing file(s) to proceed.")
-
     def addFiles(self):
         getFilesVar = filedialog.askopenfilenames(title="Select Target Drawing Files", filetypes=[("DWG files", "*.dwg")])
         if getFilesVar is not None:
@@ -166,85 +179,56 @@ class ExternalDWG:
     def overlayXrefs(self):
         for wb in self.rightFrame.winfo_children():
             wb.destroy()
+        self.rightFrame.config(bg="skyblue")
         def browseXrefOverLayfile(xrefPathEntry):
             xrefPath = filedialog.askopenfilename(title="Select Xref Overlay File", filetypes=[("DWG files", "*.dwg")])
             if xrefPath is not None:
                 xrefPathEntry.delete(0, END)
                 xrefPathEntry.insert(0, xrefPath)
-        rightFirstFrame = Frame(self.rightFrame,bg="skyblue")
-        rightSecondFrame = Frame(self.rightFrame,bg="skyblue")
-        rightThirdFrame = Frame(self.rightFrame,bg="skyblue")
-        self.rightFrame.config(bg="skyblue")
-        # self.root.geometry("415x150")
-        # self.root.maxsize(415,150)
-        # self.root.resizable(False, False)
-        # First frame elements:
-        optionLabel = Label(rightFirstFrame, text="Option", bg="skyblue", borderwidth=1, relief=SOLID)
-        optionLabel.pack(side="top", fill=X)
-        xrefPathLabel = Label(rightFirstFrame, text="Xref Path", borderwidth=1, relief=SOLID)
-        xrefPathLabel.pack(side="top", anchor="w", fill=X ,pady=2)
-        xrefInsertionPointLabel = Label(rightFirstFrame, text="Insertion Point", borderwidth=1, relief=SOLID)
-        xrefInsertionPointLabel.pack(side="top", anchor="w", fill=X ,pady=1)
-        xrefRotationLabel = Label(rightFirstFrame, text="Rotation", borderwidth=1, relief=SOLID)
-        xrefRotationLabel.pack(side="top", anchor="w", fill=X ,pady=1)
-        xrefScaleLabel = Label(rightFirstFrame, text="Scale", borderwidth=1, relief=SOLID)
-        xrefScaleLabel.pack(side="top", anchor="w", fill=X ,pady=1)
-        xrefDraworderLabel = Label(rightFirstFrame, text="Draworder - Front/Back", borderwidth=1, relief=SOLID)
-        xrefDraworderLabel.pack(side="top", anchor="w", fill=X ,pady=1)
-        xrefLayerLabel = Label(rightFirstFrame, text="Destination Layer Name", borderwidth=1, relief=SOLID)
-        xrefLayerLabel.pack(side="top", anchor="w", fill=X ,pady=1)
-
-        # Second frame elements:
-        xrefValueLabel = Label(rightSecondFrame, text="Value", bg="skyblue", borderwidth=1, relief=SOLID)
-        xrefValueLabel.pack(side="top", fill=X)
-        xrefPathEntry = Entry(rightSecondFrame)
-        xrefPathEntry.pack(side="top", fill=X ,pady=2)
-        xrefInsertionPointEntry = Entry(rightSecondFrame)
-        xrefInsertionPointEntry.pack(side="top", fill=X ,pady=1)
-        xrefInsertionPointEntry.insert(0, "0,0,0")
-        xrefRotationEntry = Entry(rightSecondFrame)
-        xrefRotationEntry.pack(side="top", fill=X ,pady=1)
-        xrefRotationEntry.insert(0,"0")
-        xrefScaleEntry = Entry(rightSecondFrame)
-        xrefScaleEntry.pack(side="top", fill=X ,pady=1)
-        xrefScaleEntry.insert(0,"1")
-        xrefDraworderEntry = Entry(rightSecondFrame)
-        xrefDraworderEntry.pack(side="top", fill=X ,pady=1)
-        xrefDraworderEntry.insert(0,"back")
-        xrefLayerEntry = Entry(rightSecondFrame)
-        xrefLayerEntry.pack(side="top", fill=X ,pady=1)
-        xrefLayerEntry.insert(0,"ZZ-Zz9030-M-ExtReferenceInfo")
-
-        # Third frame elements:
-        blankLabel = Label(rightThirdFrame, text="",bg="skyblue", borderwidth=1,relief=SOLID)
-        blankLabel.pack(side="top", fill=X)
-        xrefBrowseBtn = Button(rightThirdFrame, text="Browse", command=lambda x=xrefPathEntry:browseXrefOverLayfile(x))
-        xrefBrowseBtn.pack(side="top", fill=X)
+        overlayHeading = Label(self.rightFrame, text="Overlay Xref", font=("Arial", 15, ["bold", "underline"]), bg="skyblue").pack(side=TOP)
+        mainContainer = Frame(self.rightFrame, bg="skyblue")
+        mainContainer.pack(fill=BOTH, expand=True, padx=10, pady=10)
+        labels = [
+            "Xref Path", "Insertion Point", "Rotation", "Scale", "Draworder - Front/Back", "Destination Layer Name"
+        ]
+        default_values = [
+            "", "0,0,0", "0", "1", "back", "ZZ-Zz9030-M-ExtReferenceInfo"
+        ]
+        entries = []
+        for i, (label_text, default_value) in enumerate(zip(labels, default_values)):
+            # Label
+            label = Label(mainContainer, text=label_text, bg="skyblue", font=("Arial", 10, "bold"), anchor="w")
+            label.grid(row=i, column=0, sticky="w", padx=5, pady=5)
+            entry = Entry(mainContainer, font=("Arial", 10))
+            entry.insert(0, default_value)
+            entry.grid(row=i, column=1, sticky="ew", padx=5, pady=5)
+            entries.append(entry)
+            if label_text == "Xref Path":
+                browse_button = Button(mainContainer, text="Browse", command=lambda e=entry: browseXrefOverLayfile(e))
+                browse_button.grid(row=i, column=2, padx=5, pady=5)
         def addThisOverlayToTaskList():
-            xrefPath = xrefPathEntry.get()
-            layerName = xrefLayerEntry.get()
-            draworder = xrefDraworderEntry.get()
-            insertionPoint = xrefInsertionPointEntry.get()
-            rotation = xrefRotationEntry.get()
-            scale = xrefScaleEntry.get()
+            xrefPath = entries[0].get()
+            insertionPoint = entries[1].get()
+            rotation = entries[2].get()
+            scale = entries[3].get()
+            draworder = entries[4].get()
+            layerName = entries[5].get()
             if not all([xrefPath, layerName, draworder, insertionPoint, rotation, scale]):
                 messagebox.showerror("Invalid input", "All fields are required.")
                 return
             listToInject = getLispToOverlayeXref(xrefPath, layerName, draworder)
+            if listToInject in self.taskList:
+                messagebox.showerror("Duplicate Task", "Task already exists in the task list.")
+                return
             self.taskList.append(listToInject)
-            print(listToInject)
-        addTaskButton = Button(rightThirdFrame, text="Add", command=addThisOverlayToTaskList).pack(side=TOP, fill=BOTH,expand=True)
-        # for i in range(5):
-        #     Label(rightThirdFrame, text="", bg="skyblue").pack(side="top", fill=BOTH)
-        
-        
-        # Packing the frames side by side
-        rightFirstFrame.pack(side="left", anchor="nw", fill=Y)
-        rightSecondFrame.pack(side="left", anchor="n", fill=Y)
-        rightThirdFrame.pack(side="right", anchor="n",fill=Y)
-        
+            messagebox.showinfo("Success", "Task added to the task list.")
+            entries[0].delete(0,END)
+            # print(listToInject)
+        add_button = Button(mainContainer, text="Add Task", command=addThisOverlayToTaskList, bg="lightgreen", font=("Arial", 10, "bold"))
+        add_button.grid(row=len(labels), column=0, columnspan=3, pady=10, sticky="ew")
+        mainContainer.grid_columnconfigure(1, weight=1)
+        mainContainer.grid_rowconfigure(len(labels), weight=1)
 root = Tk()
-
 if not os.path.exists(autoDeskFolder):
     messagebox.showerror("AutoDesk not found", "Please install AutoCAD/CIVIL 3D installed before using it.")
     exit(0)
@@ -261,11 +245,9 @@ for fs in internalAutoDeskFolder:
             C3DVersions.add(versionNumber)
         if "acad.exe" in list(intenalAutoCADFolder):
             AcadVersions.add(versionNumber)
-
 print(versions)
 print(f"C3D versions: {C3DVersions}")
 print(f"Acad versions: {AcadVersions}")
-
 externalDWG = ExternalDWG(root)
 externalDWG.showIntroduction()
 root.mainloop()
