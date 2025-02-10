@@ -119,6 +119,8 @@ class ExternalDWG:
         canvas.pack(side=LEFT, fill=BOTH, expand=True)
         scrollbar.pack(side=RIGHT, fill=Y)
         self.add_drawing_check_vars = []
+        canvas.bind("<Enter>", lambda e: canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units")))
+        canvas.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
         for index, file in enumerate(self.selected_files):
             var = IntVar(value=1 if file in self.toworkonfiles else 0)
             self.add_drawing_check_vars.append(var)
