@@ -35,6 +35,7 @@ class ExternalDWG:
         self.leftMainFrame.pack(side='left', fill='y')
         self.rightFrame = Frame(self.root)
         self.rightFrame.pack(fill=BOTH, expand=True)
+#####################################################################################################################################################################
     def showTasklist(self):
         self.root.maxsize(600, 300)
         self.root.geometry("600x300")
@@ -70,6 +71,45 @@ class ExternalDWG:
             label = Label(task_frame, text=task, wraplength=300, anchor=W, justify=LEFT)
             label.pack(side=LEFT, fill=X, expand=True)
         removeTaskButton = Button(self.rightFrame, text="Remove Selected", width=18, command=self.removeSelectedTask).pack(side=BOTTOM, pady=3)
+        moveSelectedUpButton = Button(self.rightFrame, text="Move Up", width=18, command=self.moveUp).pack(side=BOTTOM, pady=3)
+        moveSelectedDownButton = Button(self.rightFrame, text="Move Down", width=18, command=self.moveDown).pack(side=BOTTOM, pady=3)
+        self.selectAllTaskButton = Button(self.rightFrame, text="Select All", width=18, command=self.toggleTaskSelectButton)
+        self.selectAllTaskButton.pack(side=BOTTOM, pady=3)
+    def moveUp(self):
+        try:
+            pass
+        except Exception as e:
+            messagebox.showinfo("No task selected", "Please select a task to proceed.")
+    def moveDown(self):
+        try:
+            # print(self.toworkonTasklist)
+            pass
+        except Exception as e:
+            messagebox.showinfo("No task selected", "Please select a task to proceed.")
+    def toggleTaskSelectButton(self):
+        if all(var.get() == 1 for var in self.tasks_check_vars):
+            self.unselectAllTasks()
+        else:
+            self.selectAllTasks()
+    def selectAllTasks(self):
+        for var in self.tasks_check_vars:
+            var.set(1)
+        self.toworkonTasklist.update(self.taskList)
+        self.updateSelectAllTaskButtonText()
+    def unselectAllTasks(self):
+        for var in self.tasks_check_vars:
+            var.set(0)    
+        self.toworkonfiles.clear()
+        self.updateSelectAllTaskButtonText()
+    def updateSelectAllTaskButtonText(self):
+        if not self.tasks_check_vars:
+            self.selectAllTaskButton.config(state=DISABLED)
+        else:
+            self.selectAllTaskButton.config(state=NORMAL)
+        if all(var.get() == 1 for var in self.tasks_check_vars):
+            self.selectAllTaskButton.config(text="Unselect All")
+        else:
+            self.selectAllTaskButton.config(text="Select All")
     def update_task(self, index):
         if self.tasks_check_vars[index].get() == 1:
             if self.taskList[index] not in self.toworkonTasklist:
@@ -77,6 +117,7 @@ class ExternalDWG:
         else:
             if self.taskList[index] in self.toworkonTasklist:
                     self.toworkonTasklist.remove(self.taskList[index])
+        self.updateSelectAllTaskButtonText()
     def removeSelectedTask(self):
         try:
             task_to_remove = list(self.toworkonTasklist)
@@ -87,6 +128,7 @@ class ExternalDWG:
             self.showTasklist()
         except Exception as e:
             messagebox.showinfo("No task selected", "Please select a task to proceed.")
+####################################################################################################################################################
     def showIntroduction(self):
         # self.root.resizable(True, True)
         self.root.maxsize(600, 300)
@@ -132,11 +174,11 @@ class ExternalDWG:
             label.pack(side=LEFT, fill=X, expand=True)
         removeDrawingButton = Button(self.rightFrame, text="Remove Selected", width=18, command=self.removeSelectedFiles)
         removeDrawingButton.pack(side=BOTTOM, pady=3)
-        self.selectAllButton = Button(self.rightFrame, text="Select All", width=18, command=self.toggleSelectAll)
-        self.selectAllButton.pack(side=BOTTOM, pady=3)
+        self.selectAllFileButton = Button(self.rightFrame, text="Select All", width=18, command=self.toggleSelectAll)
+        self.selectAllFileButton.pack(side=BOTTOM, pady=3)
         addDrawingButton = Button(self.rightFrame, text="Browse", width=18, command=self.addFiles)
         addDrawingButton.pack(side=BOTTOM, pady=3)
-        self.updateSelectAllButtonText()
+        self.updateSelectAllFileButtonText()
     def toggleSelectAll(self):
         if all(var.get() == 1 for var in self.add_drawing_check_vars):
             self.unselectAllFiles()
@@ -146,12 +188,12 @@ class ExternalDWG:
         for var in self.add_drawing_check_vars:
             var.set(1)
         self.toworkonfiles.update(self.selected_files)
-        self.updateSelectAllButtonText()
+        self.updateSelectAllFileButtonText()
     def unselectAllFiles(self):
         for var in self.add_drawing_check_vars:
             var.set(0)    
         self.toworkonfiles.clear()
-        self.updateSelectAllButtonText()
+        self.updateSelectAllFileButtonText()
     def update_files(self, index):
         if self.add_drawing_check_vars[index].get() == 1:
             if self.selected_files[index] not in self.toworkonfiles:
@@ -159,7 +201,7 @@ class ExternalDWG:
         else:
             if self.selected_files[index] in self.toworkonfiles:
                     self.toworkonfiles.remove(self.selected_files[index])
-        self.updateSelectAllButtonText()
+        self.updateSelectAllFileButtonText()
     def removeSelectedFiles(self):
         files_to_remove = {file for file, var in zip(self.selected_files, self.add_drawing_check_vars) if var.get() == 1}
         if not files_to_remove:
@@ -168,15 +210,15 @@ class ExternalDWG:
         self.selected_files = [file for file in self.selected_files if file not in files_to_remove]
         self.toworkonfiles.difference_update(files_to_remove)
         self.onLoadDrawing()
-    def updateSelectAllButtonText(self):
+    def updateSelectAllFileButtonText(self):
         if not self.add_drawing_check_vars:
-            self.selectAllButton.config(state=DISABLED)
+            self.selectAllFileButton.config(state=DISABLED)
         else:
-            self.selectAllButton.config(state=NORMAL)
+            self.selectAllFileButton.config(state=NORMAL)
         if all(var.get() == 1 for var in self.add_drawing_check_vars):
-            self.selectAllButton.config(text="Unselect All")
+            self.selectAllFileButton.config(text="Unselect All")
         else:
-            self.selectAllButton.config(text="Select All")
+            self.selectAllFileButton.config(text="Select All")
     def addFiles(self):
         getFilesVar = filedialog.askopenfilenames(title="Select Target Drawing Files", filetypes=[("DWG files", "*.dwg")])
         if getFilesVar is not None:
