@@ -75,17 +75,31 @@ class ExternalDWG:
         moveSelectedDownButton = Button(self.rightFrame, text="Move Down", width=18, command=self.moveDown).pack(side=BOTTOM, pady=3)
         self.selectAllTaskButton = Button(self.rightFrame, text="Select All", width=18, command=self.toggleTaskSelectButton)
         self.selectAllTaskButton.pack(side=BOTTOM, pady=3)
+        # self.updateSelectAllTaskButtonText()
     def moveUp(self):
         try:
-            pass
+            for e in self.toworkonTasklist:
+                index_of_e_in_tasklist = self.taskList.index(e)
+                if index_of_e_in_tasklist > 0:
+                    left_of_e = self.taskList[index_of_e_in_tasklist-1]
+                    self.taskList[index_of_e_in_tasklist-1]=e
+                    self.taskList[index_of_e_in_tasklist]=left_of_e
+                    self.update_task(index_of_e_in_tasklist)
+                    self.update_task(index_of_e_in_tasklist-1)
+                else:
+                    pass
+            
+            self.showTasklist()
         except Exception as e:
             messagebox.showinfo("No task selected", "Please select a task to proceed.")
+        self.updateSelectAllTaskButtonText()
     def moveDown(self):
         try:
             # print(self.toworkonTasklist)
             pass
         except Exception as e:
             messagebox.showinfo("No task selected", "Please select a task to proceed.")
+        self.updateSelectAllTaskButtonText()
     def toggleTaskSelectButton(self):
         if all(var.get() == 1 for var in self.tasks_check_vars):
             self.unselectAllTasks()
