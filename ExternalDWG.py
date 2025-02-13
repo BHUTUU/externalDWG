@@ -78,17 +78,18 @@ class ExternalDWG:
         # self.updateSelectAllTaskButtonText()
     def moveUp(self):
         try:
-            for e in self.toworkonTasklist:
-                index_of_e_in_tasklist = self.taskList.index(e)
-                if index_of_e_in_tasklist > 0:
-                    left_of_e = self.taskList[index_of_e_in_tasklist-1]
-                    self.taskList[index_of_e_in_tasklist-1]=e
-                    self.taskList[index_of_e_in_tasklist]=left_of_e
-                    self.update_task(index_of_e_in_tasklist)
-                    self.update_task(index_of_e_in_tasklist-1)
+            # for e in self.toworkonTasklist:
+            #     index_of_e_in_tasklist = self.taskList.index(e)
+            #     if index_of_e_in_tasklist > 0:
+            #         left_of_e = self.taskList[index_of_e_in_tasklist-1]
+            #         self.taskList[index_of_e_in_tasklist-1]=e
+            #         self.tasks_check_vars[index_of_e_in_tasklist-1] = IntVar(value=1)
+            #         self.taskList[index_of_e_in_tasklist]=left_of_e
+            #         self.tasks_check_vars[index_of_e_in_tasklist] = IntVar(value=0)
+            #         self.update_task(index_of_e_in_tasklist)
+            #         self.update_task(index_of_e_in_tasklist-1)
                 else:
                     pass
-            
             self.showTasklist()
         except Exception as e:
             messagebox.showinfo("No task selected", "Please select a task to proceed.")
